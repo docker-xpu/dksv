@@ -5,7 +5,6 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/net"
-
 	//"os"
 	//"runtime"
 	"testing"

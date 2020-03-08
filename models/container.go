@@ -1,6 +1,10 @@
 package models
 
 var (
+	RUNNING             string = "running"
+	STOP                string = "stopped"
+	Exit                string = "exited"
+
 	DefaultInfoLocation = "/var/run/my-docker/%s/"              // 容器基础信息存储路径
 	ConfigName          = "config.json"                         // 配置文件名
 	ContainerLogFile    = "container.log"                       // 日志文件名

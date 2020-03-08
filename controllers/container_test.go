@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"testing"
 )
 
@@ -70,4 +71,10 @@ func Test002(t *testing.T) {
 	for index := range containerLogs {
 		fmt.Println(containerLogs[index])
 	}
+}
+
+func Test003(t *testing.T) {
+	cmd := exec.Command(models.MyDockerBinPath, "stop", "brid")
+	res, _ := cmd.CombinedOutput()
+	fmt.Println(string(res))
 }

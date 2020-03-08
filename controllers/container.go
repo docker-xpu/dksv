@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -32,13 +33,16 @@ func (this *Container) Run() {
 	c := containerRunForm{}
 	json.Unmarshal(this.Ctx.Input.RequestBody, &c)
 
-	// todo 执行 my-docker run
-
 	data := &models.RESDATA{
 		Status: 0,
 		Msg:    "success",
-		Data:   "",
+		Data:   nil,
 	}
+
+	// todo 执行 ./my-docker run -d -name brid2 -net mynginxbridge -p 8888:80 mynginx nginx
+	// 判断是否有相同的容器名存在
+
+
 	this.Data["json"] = data
 	this.ServeJSON()
 }
@@ -50,31 +54,62 @@ func (this *Container) Stop() {
 	c := containerStopForm{}
 	json.Unmarshal(this.Ctx.Input.RequestBody, &c)
 
-	// todo 执行 my-docker stop
-
 	data := &models.RESDATA{
 		Status: 0,
 		Msg:    "success",
-		Data:   c,
+		Data:   nil,
 	}
+
+	// 判断容器是否存在以及状态
+	containerInfo, _ := getContainerInfo(c.ContainerName)
+	if containerInfo.Status != models.RUNNING {
+		data.Status = -1
+		data.Msg = "容器已经停止或不存在"
+	}
+	if containerInfo.Status == models.RUNNING {
+		cmd := exec.Command(models.MyDockerBinPath, "stop", c.ContainerName)
+		err := cmd.Run()
+		if err != nil {
+			data.Status = -1
+			data.Msg = fmt.Sprintf("容器停止失败:%v", err)
+		}
+		data.Data, _ = getContainerInfo(c.ContainerName)
+	}
+
 	this.Data["json"] = data
 	this.ServeJSON()
 }
 
 func (this *Container) Remove() {
+	fmt.Println("Remove()")
 	type containerRemoveForm struct {
 		ContainerName string `json:"container_name"`
 	}
 	c := containerRemoveForm{}
 	json.Unmarshal(this.Ctx.Input.RequestBody, &c)
 
-	// todo 删除容器
-
 	data := &models.RESDATA{
 		Status: 0,
 		Msg:    "success",
-		Data:   c,
+		Data:   nil,
 	}
+
+	// 判断容器是否存在以及状态
+	containerInfo, _ := getContainerInfo(c.ContainerName)
+	if containerInfo.Status != models.STOP {
+		data.Status = -1
+		data.Msg = "容器不存在或正在运行中"
+	}
+	if containerInfo.Status == models.STOP {
+		cmd := exec.Command(models.MyDockerBinPath, "rm", c.ContainerName)
+		err := cmd.Run()
+		if err != nil {
+			data.Status = -1
+			data.Msg = fmt.Sprintf("容器删除失败:%v", err)
+		}
+		data.Data, _ = getContainerInfo(c.ContainerName)
+	}
+
 	this.Data["json"] = data
 	this.ServeJSON()
 }
@@ -186,9 +221,4 @@ func getContainerLogs(containerName string) []string {
 	}
 
 	return containerLogs
-}
-
-// 判断容器是否存在，如果存在，返回容器状态，否则返回 ""
-func containerStatus(containerName string) string {
-	return ""
 }

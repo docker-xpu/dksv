@@ -29,7 +29,7 @@ func (c *MainController) Post() {
 	data := &models.RESDATA{
 		Status: 0,
 		Msg:    "success",
-		Data:   "存活",
+		//Data:   "存活",
 	}
 	c.Data["json"] = data
 	c.ServeJSON()
