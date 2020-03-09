@@ -14,12 +14,12 @@ import (
 	"strings"
 )
 
-// /api/container/run/
-type Container struct {
+type ContainerController struct {
 	beego.Controller
 }
 
-func (this *Container) Run() {
+// 运行容器
+func (this *ContainerController) Run() {
 	type containerRunForm struct {
 		ImageName     string   `json:"image_name"`
 		ContainerName string   `json:"container_name"`
@@ -51,7 +51,8 @@ func (this *Container) Run() {
 			break
 		}
 	}
-	// 判断镜像是否存在
+	// todo 判断镜像是否存在
+	//
 
 	// 如果没有相同的容器
 	// 执行 ./my-docker run -d -name brid2 -net mynginxbridge -p 8888:80 mynginx nginx
@@ -82,7 +83,8 @@ func (this *Container) Run() {
 	this.ServeJSON()
 }
 
-func (this *Container) Stop() {
+// 停止容器
+func (this *ContainerController) Stop() {
 	type containerStopForm struct {
 		ContainerName string `json:"container_name"`
 	}
@@ -115,7 +117,8 @@ func (this *Container) Stop() {
 	this.ServeJSON()
 }
 
-func (this *Container) Remove() {
+// 删除容器
+func (this *ContainerController) Remove() {
 	fmt.Println("Remove()")
 	type containerRemoveForm struct {
 		ContainerName string `json:"container_name"`
@@ -149,7 +152,8 @@ func (this *Container) Remove() {
 	this.ServeJSON()
 }
 
-func (this *Container) List() {
+// 列出容器
+func (this *ContainerController) List() {
 	containers := getAllContainerInfo()
 
 	data := &models.RESDATA{
@@ -161,7 +165,8 @@ func (this *Container) List() {
 	this.ServeJSON()
 }
 
-func (this *Container) Logs() {
+// 查看容器的日志
+func (this *ContainerController) Logs() {
 	containerName := this.GetString("container_name")
 
 	containerLogs := getContainerLogs(containerName)
