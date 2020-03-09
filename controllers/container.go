@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/shirou/gopsutil/process"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -28,7 +30,6 @@ func (this *Container) Run() {
 		CpuSet        string   `json:"cpu_set"`
 		Command       string   `json:"command"`
 		Net           string   `json:"net"`
-		HookURL       string   `json:"hook_url"`
 	}
 	c := containerRunForm{}
 	json.Unmarshal(this.Ctx.Input.RequestBody, &c)
@@ -39,9 +40,43 @@ func (this *Container) Run() {
 		Data:   nil,
 	}
 
-	// todo 执行 ./my-docker run -d -name brid2 -net mynginxbridge -p 8888:80 mynginx nginx
 	// 判断是否有相同的容器名存在
+	containers := getAllContainerInfo()
+	flag := false
+	for index := range containers {
+		if containers[index].Name == c.ContainerName {
+			data.Status = -1
+			data.Msg = "容器" + c.ContainerName + "已存在"
+			flag = true
+			break
+		}
+	}
+	// 判断镜像是否存在
 
+	// 如果没有相同的容器
+	// 执行 ./my-docker run -d -name brid2 -net mynginxbridge -p 8888:80 mynginx nginx
+	if flag == false {
+		cmd := exec.Command(
+			models.MyDockerBinPath,
+			"run", "-d",
+			"-name", c.ContainerName,
+			"-net", c.Net,
+			"-v", c.Volume,
+			"-p", c.PortMapping[0], // todo 多端口映射
+			"-cpushare", c.CpuShare,
+			"-cpuset", c.CpuSet,
+			"-m", c.MemoryLimit,
+			c.ImageName,
+			c.Command,
+		)
+		err := cmd.Run()
+		if err != nil {
+			data.Status = -1
+			data.Msg = fmt.Sprintf("创建容器失败:%v", err)
+		} else {
+			data.Data, _ = getContainerInfo(c.ContainerName)
+		}
+	}
 
 	this.Data["json"] = data
 	this.ServeJSON()
@@ -192,8 +227,37 @@ func getContainerInfo(containerName string) (*models.ContainerInfo, error) {
 	cpuSet, _ := ioutil.ReadFile(cpuSetFile)
 
 	resourceConfig.CpuSet = strings.TrimSuffix(string(cpuSet), "\n")
-
 	containerInfo.Limits = resourceConfig
+
+	// 使用 gopsutil 获取容器进程信息
+	containerPid, err := strconv.Atoi(containerInfo.Pid)
+	if err == nil { // 如果转换成功
+		proc := process.Process{Pid: int32(containerPid)}
+		extra := make(map[string]interface{})
+		extra["Background"], _ = proc.Background()   // 程序是否后台运行
+		extra["CPUAffinity"], _ = proc.CPUAffinity() // CPU 亲和力
+		extra["CPUPercent"], _ = proc.CPUPercent()   // 进程使用多少cpu时间
+		extra["Children"], _ = proc.Children()       // proc的子进程
+		extra["Cmdline"], _ = proc.CmdlineSlice()    //进程的命令行参数
+		extra["Connections"], _ = proc.Connections() // 网络连接数
+		extra["CreateTime"], _ = proc.CreateTime()   // 进程创建时间
+		extra["Cwd"], _ = proc.Cwd()                 // 进程工作目录
+		extra["Exe"], _ = proc.Exe()                 // 进程的可执行路径。
+		extra["IOCounters"], _ = proc.IOCounters()   // IO相关
+		extra["IOnice"], _ = proc.IOnice()           // io nice 值（优先级）
+		extra["IsRunning"], _ = proc.IsRunning()     // 是否在运行
+		extra["MemoryInfo"], _ = proc.MemoryInfo()
+		extra["MemoryInfoEx"], _ = proc.MemoryInfoEx()
+		extra["MemoryPercent"], _ = proc.MemoryPercent() //此过程使用的总RAM的百分之多少
+		extra["Name"], _ = proc.Name()                   // process name
+		extra["Nice"], _ = proc.Nice()                   // 进程 nice 值
+		extra["NumFDs"], _ = proc.NumFDs()               // 打开的 fd 数
+		extra["NumThreads"], _ = proc.NumThreads()       // 线程数
+
+		// extra["Rlimit"], _ = proc.Rlimit()
+		containerInfo.Extra = extra
+	}
+
 	return &containerInfo, nil
 }
 
