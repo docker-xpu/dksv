@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -38,13 +37,13 @@ func (this *ImageController) Pull() {
 	fileURL := req.ImageUrl
 	filePath := models.RootUrl
 	// 要下载的文件并不是 .tar 结尾
-	if !strings.HasSuffix(path.Base(fileURL), ".tar") {
-		data.Status = -1
-		data.Msg = "镜像文件格式错误"
-		this.Data["json"] = data
-		this.ServeJSON()
-		return
-	}
+	//if !strings.HasSuffix(path.Base(fileURL), ".tar") {
+	//	data.Status = -1
+	//	data.Msg = "镜像文件格式错误"
+	//	this.Data["json"] = data
+	//	this.ServeJSON()
+	//	return
+	//}
 
 	res, err := http.Get(fileURL)
 	if err != nil || res.Status != "200 OK" {

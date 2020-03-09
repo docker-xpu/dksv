@@ -40,6 +40,7 @@ func TestImageController_Pull(t *testing.T) {
 	fmt.Println(fileName)
 
 	res, err := http.Get(fileURL)
+	fmt.Println(res.Request)
 	if err != nil {
 		fmt.Println("A error occurred!")
 		return
