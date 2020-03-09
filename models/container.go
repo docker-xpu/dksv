@@ -8,7 +8,7 @@ var (
 	DefaultInfoLocation = "/var/run/my-docker/%s/"              // 容器基础信息存储路径
 	ConfigName          = "config.json"                         // 配置文件名
 	ContainerLogFile    = "container.log"                       // 日志文件名
-	RootUrl             = "/root/images/"                       // 根目录
+	RootUrl             = "/root/images/"                       // 镜像目录
 	MntUrl              = "/root/mnt/%s/"                       // 挂载路径
 	WriteLayerUrl       = "/root/writeLayer/%s/"                // 可写层路径
 	DefaultNetworkPath  = "/var/run/my-docker/network/network/" // 默认网络路径
@@ -25,17 +25,6 @@ type ContainerResourceConfig struct {
 	MemoryLimit memLimit `json:"memoryLimit"` // 内存限制
 	CpuShare    string   `json:"cpuShare"`    // CPU 份额(相对权重) 默认为 1024,单个 CPU 为 1024，两个为 2048，以此类推
 	CpuSet      string   `json:"cpuSet"`      // CPU 亲和性
-}
-
-// 容器的网络资源
-type ipConfig struct {
-	IP   string `json:"IP"`   // IP
-	Mask string `json:"Mask"` // 掩码
-}
-type ContainerNetWorkConfig struct {
-	Name    string   `json:"name"` // 网络名
-	IpRange ipConfig `json:"IpRange"`
-	Driver  string   `json:"Driver"` // 驱动
 }
 
 // 容器信息

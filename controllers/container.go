@@ -180,6 +180,44 @@ func (this *ContainerController) Logs() {
 	this.ServeJSON()
 }
 
+// 将本机的容器打包成镜像
+func (this *ContainerController) Commit() {
+	data := models.RESDATA{
+		Status: 0,
+		Msg:    "success",
+		Data:   nil,
+	}
+	// 解析参数
+	type containerCommitForm struct {
+		ImageName string `json:"image_name"`
+		ContainerName string `json:"container_name"`
+	}
+	req := containerCommitForm{}
+	json.Unmarshal(this.Ctx.Input.RequestBody, &req)
+
+	containers := getAllContainerInfo()
+	flag := false
+	for index := range containers {
+		if containers[index].Name == req.ContainerName {
+			flag = true
+		}
+	}
+
+	// 如果容器存在，打包容器
+	// my-docker commit 容器名 镜像名
+	if flag == true {
+		cmd := exec.Command(models.MyDockerBinPath, "commit", req.ContainerName, req.ImageName)
+		cmd.Run()
+		data.Data = getImageInfoByName(req.ImageName)
+	} else {
+		data.Status = -1
+		data.Msg = fmt.Sprintf("没有要打包的容器:%s", req.ContainerName)
+	}
+
+	this.Data["json"] = data
+	this.ServeJSON()
+}
+
 // 从本机获取所有容器的信息
 func getAllContainerInfo() []*models.ContainerInfo {
 	dirURL := fmt.Sprintf(models.DefaultInfoLocation, "")

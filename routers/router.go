@@ -16,9 +16,20 @@ func init() {
 	beego.Router("/api/test/", &controllers.MainController{})
 
 	// 容器操作
-	beego.Router("/api/container/run/", &controllers.Container{}, "post:Run")
-	beego.Router("/api/container/stop/", &controllers.Container{}, "post:Stop")
-	beego.Router("/api/container/remove/", &controllers.Container{}, "post:Remove")
-	beego.Router("/api/container/list/", &controllers.Container{}, "get:List")
-	beego.Router("/api/container/logs/", &controllers.Container{}, "get:Logs")
+	beego.Router("/api/container/run/", &controllers.ContainerController{}, "post:Run")
+	beego.Router("/api/container/stop/", &controllers.ContainerController{}, "post:Stop")
+	beego.Router("/api/container/remove/", &controllers.ContainerController{}, "post:Remove")
+	beego.Router("/api/container/list/", &controllers.ContainerController{}, "get:List")
+	beego.Router("/api/container/logs/", &controllers.ContainerController{}, "get:Logs")
+	beego.Router("/api/container/commit/", &controllers.ContainerController{}, "post:Commit")
+
+	// 镜像操作
+	beego.Router("/api/image/list/", &controllers.ImageController{}, "get:List")
+	beego.Router("/api/image/pull/", &controllers.ImageController{}, "post:Pull")
+	beego.Router("/api/image/remove/", &controllers.ImageController{}, "post:Remove")
+
+	// 网络操作
+	beego.Router("/api/network/create/", &controllers.NetworkController{}, "post:Create")
+	beego.Router("/api/network/list/", &controllers.NetworkController{}, "get:List")
+	beego.Router("/api/network/remove/", &controllers.NetworkController{}, "post:Remove")
 }
